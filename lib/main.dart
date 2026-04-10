@@ -1,8 +1,7 @@
-import 'package:flutter/cupertino.dart';
+ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 
@@ -35,7 +34,8 @@ class MainStudio extends StatefulWidget {
 class _MainStudioState extends State<MainStudio> {
   CameraController? _controller;
   final AudioPlayer _audioPlayer = AudioPlayer();
-  bool showSidhuAlert = false;
+  bool showNamePopup = false;
+  String lastSubName = "DEEP JATT"; // Default testing name
   int subCount = 104000;
 
   @override
@@ -45,24 +45,27 @@ class _MainStudioState extends State<MainStudio> {
   }
 
   _initCamera() async {
-    _controller = CameraController(cameras[0], ResolutionPreset.max);
-    await _controller!.initialize();
-    setState(() {});
+    if (cameras.isNotEmpty) {
+      _controller = CameraController(cameras[0], ResolutionPreset.max);
+      await _controller!.initialize();
+      setState(() {});
+    }
   }
 
-  // THE REVOLUTIONARY ALERT SYSTEM
-  void triggerMoosewalaAlert() async {
+  // NAME POPUP LOGIC
+  void triggerNewSub(String name) async {
     setState(() {
-      showSidhuAlert = true;
+      lastSubName = name.toUpperCase();
+      showNamePopup = true;
       subCount++;
     });
     
     // Play Sidhu Moosewala Sound
     await _audioPlayer.play(AssetSource('sound.mp3'));
 
-    // Hide alert after 4 seconds
+    // Hide popup after 4 seconds
     Future.delayed(const Duration(seconds: 4), () {
-      setState(() => showSidhuAlert = false);
+      setState(() => showNamePopup = false);
     });
   }
 
@@ -72,69 +75,80 @@ class _MainStudioState extends State<MainStudio> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // 1. Camera Preview (Full Screen)
+          // 1. Camera Feed
           if (_controller != null && _controller!.value.isInitialized)
             Positioned.fill(child: CameraPreview(_controller!)),
 
-          // 2. iOS Style Header
+          // 2. iOS Header
           Positioned(
             top: 50, left: 20, right: 20,
-            child: FadeInDown(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("JX STUDIO PRO", style: GoogleFonts.bebasNeue(fontSize: 30, color: Colors.amber)),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.black26, borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.greenAccent),
-                    ),
-                    child: Text("$subCount SUBS", style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("JX STUDIO PRO", style: GoogleFonts.oswald(fontSize: 24, color: Colors.amber, fontWeight: FontWeight.bold)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black45, borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.greenAccent),
                   ),
-                ],
-              ),
+                  child: Text("$subCount SUBS", style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
+                ),
+              ],
             ),
           ),
 
-          // 3. SIDHU MOOSEWALA POPUP (Cartoon Character)
-          if (showSidhuAlert)
+          // 3. SUBSCRIBER NAME POPUP (The New System)
+          if (showNamePopup)
             Center(
-              child: ZoomIn(
-                duration: const Duration(milliseconds: 500),
+              child: ElasticIn(
+                duration: const Duration(milliseconds: 800),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Lottie.asset('assets/character.json', height: 300), // Tera Cartoon
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 10)],
+                      ),
+                      child: Text(
+                        "NEW SUBSCRIBER",
+                        style: GoogleFonts.bebasNeue(fontSize: 20, color: Colors.black),
+                      ),
+                    ),
                     const SizedBox(height: 10),
-                    Text("NEW JATT SUBSCRIBER!", style: GoogleFonts.permanentMarker(fontSize: 25, color: Colors.white)),
+                    Text(
+                      lastSubName,
+                      style: GoogleFonts.anton(
+                        fontSize: 50, 
+                        color: Colors.white,
+                        shadows: [Shadow(color: Colors.black, blurRadius: 15)],
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
 
-          // 4. iOS Glass Bottom Controls
+          // 4. Bottom Controls
           Positioned(
             bottom: 40, left: 20, right: 20,
-            child: FadeInUp(
-              child: Container(
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.white10, borderRadius: BorderRadius.circular(40),
-                  border: Border.all(color: Colors.white24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Testing Button
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: () => triggerNewSub("Sidhu Fan"), 
+                  child: Container(
+                    padding: const EdgeInsets.all(15),
+                    decoration: const BoxDecoration(color: Colors.amber, shape: BoxShape.circle),
+                    child: const Icon(CupertinoIcons.bell_fill, color: Colors.black),
+                  ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    const Icon(CupertinoIcons.settings, color: Colors.white),
-                    IconButton(
-                      icon: const Icon(CupertinoIcons.play_circle_fill, color: Colors.amber, size: 50),
-                      onPressed: triggerMoosewalaAlert, // Testing alert
-                    ),
-                    const Icon(CupertinoIcons.slider_horizontal_3, color: Colors.white),
-                  ],
-                ),
-              ),
+              ],
             ),
           ),
         ],
@@ -142,3 +156,4 @@ class _MainStudioState extends State<MainStudio> {
     );
   }
 }
+ 
